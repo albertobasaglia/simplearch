@@ -13,19 +13,18 @@ Processor registers:
 
 Data types:
         - <IMMEDIATE> is an immediate value
-        - <MEMORY> is a memory address
         - <REGISTER> is a register
 
 Processor instructions:
         MEMORY:
-                - LOAD dest <REGISTER>, src <REGISTER>
-                - SAVE src <REGISTER>, dest <REGISTER>
+                - LOAD dest <REGISTER> src <REGISTER>
+                - STORE src <REGISTER> dest <REGISTER>
         MOVE:
-                - MOV dest <REGISTER>, src <REGISTER>
+                - MOV dest <REGISTER> src <REGISTER>
         ARITHMETICS:
-                - ADD dest <REGISTER>, op1 <REGISTER>, op2 <REGISTER/IMMEDIATE>
-                - SUB dest <REGISTER>, op1 <REGISTER>, op2 <REGISTER/IMMEDIATE>
-                - CMP op1 <REGISTER>, op2 <REGISTER/IMMEDIATE>
+                - ADD dest <REGISTER> op1 <REGISTER> op2 <REGISTER/IMMEDIATE>
+                - SUB dest <REGISTER> op1 <REGISTER> op2 <REGISTER/IMMEDIATE>
+                - CMP op1 <REGISTER> op2 <REGISTER/IMMEDIATE>
         BRANCH:
                 - J[C] address <MEMORY>
 
