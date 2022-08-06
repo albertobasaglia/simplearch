@@ -203,7 +203,7 @@ uint32_t instruction_arithmetics_encode(int register_dest,
 	instruction |= (register_op2 & INSTRUCTION_ARIT_OP2_MASK)
 		       << INSTRUCTION_ARIT_OP2_SHIFT;
 
-	instruction |= operation_type << INSTRUCTION_ARIT_TYPE_ADD;
+	instruction |= operation_type << INSTRUCTION_ARIT_TYPE_SHIFT;
 
 	return instruction;
 }
@@ -234,7 +234,7 @@ uint32_t instruction_encode(const char* str)
 		return instruction_arithmetics_encode(
 		    operands[0], operands[1], operands[2],
 		    INSTRUCTION_ARIT_TYPE_SUB);
-	} else if (strcmp(info.name, INSTRUCTION_SUBTRACT) == 0) {
+	} else if (strcmp(info.name, INSTRUCTION_COMPARE) == 0) {
 		return instruction_arithmetics_encode(
 		    -1, operands[0], operands[1], INSTRUCTION_ARIT_TYPE_CMP);
 	}

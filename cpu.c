@@ -145,7 +145,7 @@ void cpu_arit_instruction(struct cpu* cpu, uint32_t instruction)
 	int val1 = cpu->state.r[reg_op1];
 	int val2 = cpu->state.r[reg_op2];
 
-	if (type != INSTRUCTION_ARIT_TYPE_SUB) {
+	if (type != INSTRUCTION_ARIT_TYPE_CMP) {
 		reg_dest = (instruction >> INSTRUCTION_ARIT_DEST_SHIFT) &
 			   INSTRUCTION_ARIT_DEST_MASK;
 

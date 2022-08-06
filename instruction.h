@@ -174,7 +174,7 @@ uint32_t instruction_move_immediate_encode(int immediate, int register_dest);
 #define INSTRUCTION_ARIT_OP2_SHIFT  8
 #define INSTRUCTION_ARIT_OP2_MASK   0xf
 #define INSTRUCTION_ARIT_TYPE_SHIFT 12
-#define INSTRUCTION_ARIT_TYPE_MASK  4
+#define INSTRUCTION_ARIT_TYPE_MASK  0xf
 #define INSTRUCTION_ARIT_TYPE_ADD   1
 #define INSTRUCTION_ARIT_TYPE_SUB   2
 #define INSTRUCTION_ARIT_TYPE_CMP   3
