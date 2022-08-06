@@ -10,7 +10,7 @@ struct cpu_state {
 	uint32_t r[GENERAL_REGISTER_COUNT];
 	uint32_t sp;
 	uint32_t pc;
-#define CPU_FLAG_ZERO (1 << 0)
+#define CPU_FLAG_ZERO   (1 << 0)
 #define CPU_FLAG_HALTED (1 << 31)
 	uint32_t flags;
 };
@@ -46,6 +46,6 @@ void cpu_memory_instruction(struct cpu* cpu, uint32_t instruction);
 
 void cpu_state_printdebug(struct cpu* cpu);
 
-void cpu_memory_hook(uint32_t address, int write);
+void cpu_memory_hook(struct cpu* cpu, uint32_t address, int write);
 
 #endif

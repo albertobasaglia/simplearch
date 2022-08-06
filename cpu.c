@@ -46,7 +46,7 @@ void cpu_exec(struct cpu* cpu, uint32_t instruction)
 	if (signature == INSTRUCTION_MOVE_SIGNATURE) {
 		cpu_move_instruction(cpu, instruction);
 	} else if (signature == INSTRUCTION_MEMORY_SIGNATURE) {
-                cpu_memory_instruction(cpu, instruction);
+		cpu_memory_instruction(cpu, instruction);
 	} else if (signature == INSTRUCTION_HALT_SIGNATURE) {
 		cpu_halt(cpu);
 	}
@@ -114,20 +114,28 @@ void cpu_memory_instruction(struct cpu* cpu, uint32_t instruction)
 	      INSTRUCTION_MEMORY_REGISTER_MASK;
 	address = (instruction >> INSTRUCTION_MEMORY_ADDRESS_SHIFT) &
 		  INSTRUCTION_MEMORY_ADDRESS_MASK;
+	uint32_t address_value = cpu->state.r[address];
 	if (instruction & INSTRUCTION_MEMORY_STORE) {
-		memory_write(&cpu->memory, address, cpu->state.r[reg]);
-		cpu_memory_hook(address, 1);
+		memory_write(&cpu->memory, address_value, cpu->state.r[reg]);
+		cpu_memory_hook(cpu, address_value, 1);
 	} else {
 		uint32_t read;
-		memory_read(&cpu->memory, address, &read);
+		memory_read(&cpu->memory, address_value, &read);
 		cpu->state.r[reg] = read;
-		cpu_memory_hook(address, 0);
+		cpu_memory_hook(cpu, address_value, 0);
 	}
 }
 
-void cpu_memory_hook(uint32_t address, int write)
+void cpu_memory_hook(struct cpu* cpu, uint32_t address, int write)
 {
-	// useful if we will have memory mapped devices
+	struct mm_zone* ptr = cpu->memory.mm_zone_head;
+	while (ptr != NULL) {
+		if (address >= ptr->external_offset &&
+		    address < ptr->external_offset + ptr->size) {
+			ptr->hook(address - ptr->external_offset);
+		}
+		ptr = ptr->next;
+	}
 }
 
 void cpu_state_printdebug(struct cpu* cpu)
