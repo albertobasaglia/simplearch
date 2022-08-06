@@ -141,14 +141,16 @@ uint32_t instruction_encode(const char* str);
  * */
 uint32_t instruction_memory_encode(int reg, int address, int store);
 
-#define INSTRUCTION_MOVE_SIGNATURE    (1 << 28)
-#define INSTRUCTION_MOVE_IMM          (1 << 0)
-#define INSTRUCTION_MOVE_SRC_SHIFT    1
-#define INSTRUCTION_MOVE_SRC_MASK     0xf
-#define INSTRUCTION_MOVE_IMM_SHIFT    1
-#define INSTRUCTION_MOVE_IMM_MASK     0xffff // could be more
-#define INSTRUCTION_MOVE_DEST_SHIFT   24
-#define INSTRUCTION_MOVE_IMM_NEGATIVE (1 << 23)
+#define INSTRUCTION_MOVE_SIGNATURE          (1 << 28)
+#define INSTRUCTION_MOVE_IMM                (1 << 0)
+#define INSTRUCTION_MOVE_SRC_SHIFT          1
+#define INSTRUCTION_MOVE_SRC_MASK           0xf
+#define INSTRUCTION_MOVE_IMM_SHIFT          1
+#define INSTRUCTION_MOVE_IMM_MASK           0xffff // could be more
+#define INSTRUCTION_MOVE_DEST_MASK          0xf
+#define INSTRUCTION_MOVE_DEST_SHIFT         24
+#define INSTRUCTION_MOVE_IMM_NEGATIVE_SHIFT (23)
+#define INSTRUCTION_MOVE_IMM_NEGATIVE       (1 << 23)
 /*
  * Encodes a move instruction.
  *

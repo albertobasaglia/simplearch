@@ -40,4 +40,8 @@ void cpu_halt(struct cpu* cpu);
 
 int cpu_is_halted(struct cpu* cpu);
 
+void cpu_move_instruction(struct cpu* cpu, uint32_t instruction);
+
+void cpu_state_printdebug(struct cpu* cpu);
+
 #endif

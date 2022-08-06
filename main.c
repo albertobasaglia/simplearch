@@ -17,7 +17,8 @@ int main(int argc, char* argv[])
 	fread(cpu.memory.ptr, 1000, 1, in); // TODO do this better pls
 	while (!cpu_is_halted(&cpu)) {
 		cpu_tick(&cpu);
-		usleep(1000000);
+		usleep(100000);
+                cpu_state_printdebug(&cpu);
 	}
 	cpu_free(&cpu);
 	fclose(in);

@@ -41,15 +41,16 @@ uint32_t cpu_fetch(struct cpu* cpu)
 
 void cpu_exec(struct cpu* cpu, uint32_t instruction)
 {
-	printf("Executing %#x\n", instruction);
+	/* printf("Executing %#x\n", instruction); */
 	uint32_t signature = instruction & INSTRUCTION_SIGNATURE;
 	if (signature == INSTRUCTION_MOVE_SIGNATURE) {
-		printf("Move signature\n");
+		cpu_move_instruction(cpu, instruction);
+		/* printf("Move signature\n"); */
 	} else if (signature == INSTRUCTION_MEMORY_SIGNATURE) {
-		printf("Memory signature\n");
+		/* printf("Memory signature\n"); */
 	} else if (signature == INSTRUCTION_HALT_SIGNATURE) {
-                printf("Halt signature\n");
-                cpu_halt(cpu);
+		/* printf("Halt signature\n"); */
+		cpu_halt(cpu);
 	}
 }
 
@@ -81,4 +82,39 @@ void cpu_halt(struct cpu* cpu)
 int cpu_is_halted(struct cpu* cpu)
 {
 	return cpu->state.flags & CPU_FLAG_HALTED;
+}
+
+void cpu_move_instruction(struct cpu* cpu, uint32_t instruction)
+{
+	if (instruction & INSTRUCTION_MOVE_IMM) {
+		uint32_t src;
+		uint32_t dest;
+		dest = (instruction >> INSTRUCTION_MOVE_DEST_SHIFT) &
+		       INSTRUCTION_MOVE_DEST_MASK;
+		src = (instruction >> INSTRUCTION_MOVE_IMM_SHIFT) &
+		      INSTRUCTION_MOVE_IMM_MASK;
+		if ((instruction >> INSTRUCTION_MOVE_IMM_NEGATIVE_SHIFT) & 1) {
+			src *= -1;
+		}
+		cpu->state.r[dest] = src;
+	} else {
+		uint32_t src;
+		uint32_t dest;
+		src = (instruction >> INSTRUCTION_MOVE_SRC_SHIFT) &
+		      INSTRUCTION_MOVE_SRC_MASK;
+		dest = (instruction >> INSTRUCTION_MOVE_DEST_SHIFT) &
+		       INSTRUCTION_MOVE_DEST_MASK;
+		cpu->state.r[dest] = cpu->state.r[src];
+	}
+}
+
+void cpu_state_printdebug(struct cpu* cpu)
+{
+	printf("Registers: ");
+	for (int rc = 0; rc < GENERAL_REGISTER_COUNT; rc++) {
+		if (rc % 4 == 0)
+			printf("\n");
+		printf("R%d: %08x\t", rc, cpu->state.r[rc]);
+	}
+	printf("\nPC: %0#x\n", cpu->state.pc);
 }

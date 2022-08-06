@@ -130,7 +130,7 @@ uint32_t instruction_move_encode(int register_src, int register_dest)
 	instruction |= INSTRUCTION_MOVE_SIGNATURE;
 	register_src &= INSTRUCTION_MOVE_SRC_MASK;
 	instruction |= (register_src << INSTRUCTION_MOVE_SRC_SHIFT);
-	register_dest &= INSTRUCTION_MOVE_SRC_MASK;
+	register_dest &= INSTRUCTION_MOVE_DEST_MASK;
 	instruction |= (register_dest << INSTRUCTION_MOVE_DEST_SHIFT);
 	return instruction;
 }
