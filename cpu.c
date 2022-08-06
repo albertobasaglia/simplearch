@@ -25,6 +25,6 @@ int cpu_init(struct cpu* cpu, int memory_size)
 
 int cpu_free(struct cpu* cpu)
 {
-        memory_free(&cpu->memory);
-        return 0;
+	memory_free(&cpu->memory);
+	return 0;
 }

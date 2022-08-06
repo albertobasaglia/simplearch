@@ -1,6 +1,7 @@
 CC = gcc
 OBJS = cpu.o \
-       memory.o
+       memory.o \
+       instruction.o
 
 all: emulator
 

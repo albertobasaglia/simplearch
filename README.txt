@@ -2,11 +2,14 @@ Arch specifications:
 
 Instructions are encoded on 32 bits.
 Memory can be accessed in 4byte aligned addresses.
+Condition codes are available only on some instructions [C].
 
 Processor registers:
         - r0 to r9 for general use
-        - sp - stack pointer
-        - pc - program counter
+        - sp - stack pointer (r10)
+        - lr - link register (r11)
+        - fp - frame pointer (r12)
+        - pc - program counter (r15)
 
 Data types:
         - <IMMEDIATE> is an immediate value
@@ -14,15 +17,20 @@ Data types:
         - <REGISTER> is a register
 
 Processor instructions:
-        - LOAD <REGISTER>, <MEMORY>
-        - SAVE <REGISTER>, <MEMORY>
-        - MOV <REGISTER>, <REGISTER>
-        - ADD <REGISTER>, <REGISTER>, <REGISTER>
-        - SUB <REGISTER>, <REGISTER>, <REGISTER>
-        - CMP <REGISTER>, <REGISTER>
-        - CMP <REGISTER>, <IMMEDIATE>
-        - J <MEMORY>
+        MEMORY:
+                - LOAD dest <REGISTER>, src <REGISTER>
+                - SAVE src <REGISTER>, dest <REGISTER>
+        MOVE:
+                - MOV dest <REGISTER>, src <REGISTER>
+        ARITHMETICS:
+                - ADD dest <REGISTER>, op1 <REGISTER>, op2 <REGISTER/IMMEDIATE>
+                - SUB dest <REGISTER>, op1 <REGISTER>, op2 <REGISTER/IMMEDIATE>
+                - CMP op1 <REGISTER>, op2 <REGISTER/IMMEDIATE>
+        BRANCH:
+                - J[C] address <MEMORY>
 
-Condition codes:
-        - EQ
-        - NE
+Condition codes [C]:
+        - EQ: equal
+        - NE: not equal
+        - GT: greater than
+        - GE: equal or greater than

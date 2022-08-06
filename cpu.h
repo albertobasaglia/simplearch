@@ -15,12 +15,14 @@ struct cpu_state {
 
 int cpu_state_init(struct cpu_state* cpu_state);
 
+
 struct cpu {
 	struct memory memory;
 	struct cpu_state state;
 };
 
 int cpu_init(struct cpu* cpu, int memory_size);
+
 int cpu_free(struct cpu* cpu);
 
 #endif
