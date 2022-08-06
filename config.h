@@ -4,6 +4,7 @@
 #define LINEBUFFER_SIZE          30
 #define MAX_OPERANDS             4
 #define MAX_OVERLOADS            4
+#define VALID_SPLIT_TOKEN        " \n,"
 
 #define GENERAL_REGISTER_COUNT   10
 

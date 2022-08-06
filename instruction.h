@@ -11,6 +11,7 @@
 #define INSTRUCTION_BRANCH   "B"
 #define INSTRUCTION_LOAD     "LOAD"
 #define INSTRUCTION_STORE    "STORE"
+#define INSTRUCTION_HALT     "HLT"
 
 enum instruction_operand_type {
 	IMMEDIATE,
@@ -54,6 +55,12 @@ static struct instruction_info instructions[] = {
 	.name = INSTRUCTION_MOVE,
 	.conditionable = 0,
 	.operand_count = 2,
+	.operands = {REGISTER, IMMEDIATE},
+    },
+    {
+	.name = INSTRUCTION_MOVE,
+	.conditionable = 0,
+	.operand_count = 2,
 	.operands = {REGISTER, REGISTER},
     },
     {
@@ -61,12 +68,6 @@ static struct instruction_info instructions[] = {
 	.conditionable = 0,
 	.operand_count = 3,
 	.operands = {REGISTER, REGISTER, REGISTER},
-    },
-    {
-	.name = INSTRUCTION_ADD,
-	.conditionable = 0,
-	.operand_count = 3,
-	.operands = {REGISTER, REGISTER, IMMEDIATE},
     },
     {
 	.name = INSTRUCTION_SUBTRACT,
@@ -79,12 +80,6 @@ static struct instruction_info instructions[] = {
 	.conditionable = 0,
 	.operand_count = 2,
 	.operands = {REGISTER, REGISTER},
-    },
-    {
-	.name = INSTRUCTION_COMPARE,
-	.conditionable = 0,
-	.operand_count = 2,
-	.operands = {REGISTER, IMMEDIATE},
     },
     {
 	.name = INSTRUCTION_BRANCH,
@@ -104,6 +99,12 @@ static struct instruction_info instructions[] = {
 	.operand_count = 2,
 	.operands = {REGISTER, REGISTER},
     },
+    {
+	.name = INSTRUCTION_HALT,
+	.conditionable = 0,
+	.operand_count = 0,
+	.operands = {},
+    },
 };
 
 /*
@@ -118,52 +119,54 @@ int instruction_match_name(const char* name, struct instruction_info* infos);
 int instruction_match_all(const char* name,
 			  const struct instruction_info* infos);
 
-enum instruction_type {
-	MEMORY, // instructions for moving data form/to main memory
-#define INSTRUCTION_MEMORY_STORE 0
-#define INSTRUCTION_MEMORY_LOAD  1
-
-	MOVE, // move data between registers
-
-	ARITHMETICS,                // arithmetic operations (and compare)
-#define INSTRUCTION_ARITHMETICS_ADD // encodes both ADD and SUB
-#define INSTRUCTION_ARITHMETICS_CMP // compare
-
-	BRANCH, // relative address branch
-#define INSTRUCTION_BRANCH_CONDITION_EQ 1
-#define INSTRUCTION_BRANCH_CONDITION_NE 2
-#define INSTRUCTION_BRANCH_CONDITION_GT 3
-#define INSTRUCTION_BRANCH_CONDITION_GE 4
-};
-
+#define INSTRUCTION_SIGNATURE (0xf << 28)
 /*
  * Encodes an instruction.
  * */
 uint32_t instruction_encode(const char* str);
 
+#define INSTRUCTION_MEMORY_SIGNATURE      (0 << 28)
+#define INSTRUCTION_MEMORY_STORE          (1 << 8)
+#define INSTRUCTION_MEMORY_REGISTER_MASK  (0xf)
+#define INSTRUCTION_MEMORY_REGISTER_SHIFT 0
+#define INSTRUCTION_MEMORY_ADDRESS_MASK   (0xf)
+#define INSTRUCTION_MEMORY_ADDRESS_SHIFT  4
 /*
  * Encodes a memory instruction.
  *
- * [0,3] - src
- * [4,7] - dest
+ * [0,3] - register
+ * [4,7] - address
  * [8]   - type
  * [28-31] = 0
  * */
-uint32_t instruction_memory_encode(int register_src,
-				   int register_dest,
-				   int operation_type);
+uint32_t instruction_memory_encode(int reg, int address, int store);
 
+#define INSTRUCTION_MOVE_SIGNATURE    (1 << 28)
+#define INSTRUCTION_MOVE_IMM          (1 << 0)
+#define INSTRUCTION_MOVE_SRC_SHIFT    1
+#define INSTRUCTION_MOVE_SRC_MASK     0xf
+#define INSTRUCTION_MOVE_IMM_SHIFT    1
+#define INSTRUCTION_MOVE_IMM_MASK     0xffff // could be more
+#define INSTRUCTION_MOVE_DEST_SHIFT   24
+#define INSTRUCTION_MOVE_IMM_NEGATIVE (1 << 23)
 /*
  * Encodes a move instruction.
  *
- * [0,3] - src
- * [4,7] - dest
+ * [0] - 0(register)1/(immediate)
+ * [24,27] - dest
  * [28-31] = 1
+ *      [0] = 0:
+ *        [1,4] - src
+ *      [1] = 1:
+ *        [1,22] - |value|
+ *        [23]   - 0(positive)/1(negative)
  * */
 uint32_t instruction_move_encode(int register_src, int register_dest);
+uint32_t instruction_move_immediate_encode(int immediate, int register_dest);
 
 /*
  * Encodes an arithmetic instruction.
+ * TODO
  *
  * [0,3]   - dest
  * [4,7]   - op1
@@ -173,11 +176,12 @@ uint32_t instruction_move_encode(int register_src, int register_dest);
  * */
 uint32_t instruction_arithmetics_encode(int register_dest,
 					int register_op1,
-					int resgister_op2,
+					int register_op2,
 					int operation_type);
 
 /*
  * Encodes a branch instruction.
+ * TODO
  *
  * [0-14]  - |offset|
  * [15] - 0(positive)/1(negative)
@@ -185,5 +189,13 @@ uint32_t instruction_arithmetics_encode(int register_dest,
  * [28-31] = 3
  * */
 uint32_t instruction_branch_encode(int address_offset, int condition_code);
+
+#define INSTRUCTION_HALT_SIGNATURE (4 << 28)
+/*
+ * Encodes an halt instruction.
+ *
+ * [28-31] = 4
+ * */
+uint32_t instruction_halt_encode();
 
 #endif

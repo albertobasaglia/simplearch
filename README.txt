@@ -25,9 +25,10 @@ Processor instructions:
                 - STORE src <REGISTER> dest <REGISTER>
         MOVE:
                 - MOV dest <REGISTER> src <REGISTER>
+                - MOV dest <REGISTER> src <IMMEDIATE>
         ARITHMETICS:
-                - ADD dest <REGISTER> op1 <REGISTER> op2 <REGISTER/IMMEDIATE>
-                - SUB dest <REGISTER> op1 <REGISTER> op2 <REGISTER/IMMEDIATE>
+                - ADD dest <REGISTER> op1 <REGISTER> op2 <REGISTER>
+                - SUB dest <REGISTER> op1 <REGISTER> op2 <REGISTER>
                 - CMP op1 <REGISTER> op2 <REGISTER/IMMEDIATE>
         BRANCH:
                 - J[C] address <MEMORY>

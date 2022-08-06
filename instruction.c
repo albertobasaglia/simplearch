@@ -72,7 +72,7 @@ uint32_t instruction_getvalue_operand(const char* str,
 void instruction_print_info(const struct instruction_info* info,
 			    const uint32_t* operands_value)
 {
-	printf("Name: %s\nOperands cound: %d\n", info->name,
+	printf("Name: %s\nOperands count: %d\n", info->name,
 	       info->operand_count);
 	for (int i = 0; i < info->operand_count; i++) {
 		enum instruction_operand_type type = info->operands[i];
@@ -98,17 +98,17 @@ int instruction_populate_info(const char* str,
 	char instruction[LINEBUFFER_SIZE];
 	strncpy(instruction, str, LINEBUFFER_SIZE);
 
-	char* name = strtok(instruction, " ,");
+	char* name = strtok(instruction, VALID_SPLIT_TOKEN);
 
 	enum instruction_operand_type operands_type[MAX_OPERANDS];
 	int index = 0;
 
-	char* operand = strtok(NULL, " ,");
+	char* operand = strtok(NULL, VALID_SPLIT_TOKEN);
 	while (operand != NULL) {
 		operands_type[index] = instruction_decode_operand(operand);
 		operands[index] = instruction_getvalue_operand(
 		    operand, operands_type[index]);
-		operand = strtok(NULL, " ,");
+		operand = strtok(NULL, VALID_SPLIT_TOKEN);
 		index++;
 	}
 
@@ -124,11 +124,71 @@ int instruction_populate_info(const char* str,
 	return 0;
 }
 
+uint32_t instruction_move_encode(int register_src, int register_dest)
+{
+	uint32_t instruction = 0;
+	instruction |= INSTRUCTION_MOVE_SIGNATURE;
+	register_src &= INSTRUCTION_MOVE_SRC_MASK;
+	instruction |= (register_src << INSTRUCTION_MOVE_SRC_SHIFT);
+	register_dest &= INSTRUCTION_MOVE_SRC_MASK;
+	instruction |= (register_dest << INSTRUCTION_MOVE_DEST_SHIFT);
+	return instruction;
+}
+
+uint32_t instruction_move_immediate_encode(int immediate, int register_dest)
+{
+	uint32_t instruction = 0;
+	instruction |= INSTRUCTION_MOVE_SIGNATURE;
+	instruction |= INSTRUCTION_MOVE_IMM;
+	int positive = immediate >= 0;
+	if (!positive)
+		immediate = -immediate;
+	immediate &= INSTRUCTION_MOVE_IMM_MASK;
+	instruction |= (immediate << INSTRUCTION_MOVE_IMM_SHIFT);
+	register_dest &= INSTRUCTION_MOVE_SRC_MASK;
+	instruction |= (register_dest << INSTRUCTION_MOVE_DEST_SHIFT);
+	if (!positive)
+		instruction |= INSTRUCTION_MOVE_IMM_NEGATIVE;
+	return instruction;
+}
+
+uint32_t instruction_memory_encode(int reg, int address, int store)
+{
+	uint32_t instruction = 0;
+	instruction |= INSTRUCTION_MEMORY_SIGNATURE;
+	if (store)
+		instruction |= INSTRUCTION_MEMORY_STORE;
+	reg &= INSTRUCTION_MEMORY_REGISTER_MASK;
+	address &= INSTRUCTION_MEMORY_ADDRESS_MASK;
+	instruction |= (reg << INSTRUCTION_MEMORY_REGISTER_SHIFT);
+	instruction |= (address << INSTRUCTION_MEMORY_ADDRESS_SHIFT);
+	return instruction;
+}
+
+uint32_t instruction_halt_encode()
+{
+	return INSTRUCTION_HALT_SIGNATURE;
+}
+
 uint32_t instruction_encode(const char* str)
 {
 	struct instruction_info info;
 	uint32_t operands[MAX_OPERANDS];
 	instruction_populate_info(str, &info, operands);
 	instruction_print_info(&info, operands);
+
+	if (strcmp(info.name, INSTRUCTION_MOVE) == 0) {
+		if (info.operands[1] == IMMEDIATE)
+			return instruction_move_immediate_encode(operands[1],
+								 operands[0]);
+		return instruction_move_encode(operands[1], operands[0]);
+	} else if (strcmp(info.name, INSTRUCTION_STORE) == 0) {
+		return instruction_memory_encode(operands[0], operands[1], 1);
+	} else if (strcmp(info.name, INSTRUCTION_LOAD) == 0) {
+		return instruction_memory_encode(operands[0], operands[1], 0);
+	} else if (strcmp(info.name, INSTRUCTION_HALT) == 0) {
+		return instruction_halt_encode();
+	}
+
 	return 0;
 }
