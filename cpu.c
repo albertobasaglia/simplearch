@@ -45,11 +45,9 @@ void cpu_exec(struct cpu* cpu, uint32_t instruction)
 	uint32_t signature = instruction & INSTRUCTION_SIGNATURE;
 	if (signature == INSTRUCTION_MOVE_SIGNATURE) {
 		cpu_move_instruction(cpu, instruction);
-		/* printf("Move signature\n"); */
 	} else if (signature == INSTRUCTION_MEMORY_SIGNATURE) {
-		/* printf("Memory signature\n"); */
+                cpu_memory_instruction(cpu, instruction);
 	} else if (signature == INSTRUCTION_HALT_SIGNATURE) {
-		/* printf("Halt signature\n"); */
 		cpu_halt(cpu);
 	}
 }
@@ -106,6 +104,30 @@ void cpu_move_instruction(struct cpu* cpu, uint32_t instruction)
 		       INSTRUCTION_MOVE_DEST_MASK;
 		cpu->state.r[dest] = cpu->state.r[src];
 	}
+}
+
+void cpu_memory_instruction(struct cpu* cpu, uint32_t instruction)
+{
+	uint32_t reg;
+	uint32_t address;
+	reg = (instruction >> INSTRUCTION_MEMORY_REGISTER_SHIFT) &
+	      INSTRUCTION_MEMORY_REGISTER_MASK;
+	address = (instruction >> INSTRUCTION_MEMORY_ADDRESS_SHIFT) &
+		  INSTRUCTION_MEMORY_ADDRESS_MASK;
+	if (instruction & INSTRUCTION_MEMORY_STORE) {
+		memory_write(&cpu->memory, address, cpu->state.r[reg]);
+		cpu_memory_hook(address, 1);
+	} else {
+		uint32_t read;
+		memory_read(&cpu->memory, address, &read);
+		cpu->state.r[reg] = read;
+		cpu_memory_hook(address, 0);
+	}
+}
+
+void cpu_memory_hook(uint32_t address, int write)
+{
+	// useful if we will have memory mapped devices
 }
 
 void cpu_state_printdebug(struct cpu* cpu)

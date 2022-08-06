@@ -42,6 +42,10 @@ int cpu_is_halted(struct cpu* cpu);
 
 void cpu_move_instruction(struct cpu* cpu, uint32_t instruction);
 
+void cpu_memory_instruction(struct cpu* cpu, uint32_t instruction);
+
 void cpu_state_printdebug(struct cpu* cpu);
+
+void cpu_memory_hook(uint32_t address, int write);
 
 #endif
