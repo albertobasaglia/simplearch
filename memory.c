@@ -23,7 +23,9 @@ int memory_free(struct memory* memory)
 void memory_add_mm_zone(struct memory* memory,
 			int external_offset,
 			int size,
-			void (*hook)(int internal_offset))
+			void (*hook)(int internal_offset,
+				     struct mm_zone* mm_zone,
+				     struct memory* memory))
 {
 	struct mm_zone* created = malloc(sizeof(struct mm_zone));
 	created->size = size;

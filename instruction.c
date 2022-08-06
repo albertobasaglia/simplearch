@@ -127,11 +127,15 @@ int instruction_populate_info(const char* str,
 uint32_t instruction_move_encode(int register_src, int register_dest)
 {
 	uint32_t instruction = 0;
+
 	instruction |= INSTRUCTION_MOVE_SIGNATURE;
 	register_src &= INSTRUCTION_MOVE_SRC_MASK;
+
 	instruction |= (register_src << INSTRUCTION_MOVE_SRC_SHIFT);
 	register_dest &= INSTRUCTION_MOVE_DEST_MASK;
+
 	instruction |= (register_dest << INSTRUCTION_MOVE_DEST_SHIFT);
+
 	return instruction;
 }
 
@@ -140,15 +144,20 @@ uint32_t instruction_move_immediate_encode(int immediate, int register_dest)
 	uint32_t instruction = 0;
 	instruction |= INSTRUCTION_MOVE_SIGNATURE;
 	instruction |= INSTRUCTION_MOVE_IMM;
+
 	int positive = immediate >= 0;
 	if (!positive)
 		immediate = -immediate;
+
 	immediate &= INSTRUCTION_MOVE_IMM_MASK;
 	instruction |= (immediate << INSTRUCTION_MOVE_IMM_SHIFT);
+
 	register_dest &= INSTRUCTION_MOVE_SRC_MASK;
 	instruction |= (register_dest << INSTRUCTION_MOVE_DEST_SHIFT);
+
 	if (!positive)
 		instruction |= INSTRUCTION_MOVE_IMM_NEGATIVE;
+
 	return instruction;
 }
 
@@ -156,18 +165,47 @@ uint32_t instruction_memory_encode(int reg, int address, int store)
 {
 	uint32_t instruction = 0;
 	instruction |= INSTRUCTION_MEMORY_SIGNATURE;
+
 	if (store)
 		instruction |= INSTRUCTION_MEMORY_STORE;
+
 	reg &= INSTRUCTION_MEMORY_REGISTER_MASK;
+
 	address &= INSTRUCTION_MEMORY_ADDRESS_MASK;
+
 	instruction |= (reg << INSTRUCTION_MEMORY_REGISTER_SHIFT);
 	instruction |= (address << INSTRUCTION_MEMORY_ADDRESS_SHIFT);
+
 	return instruction;
 }
 
 uint32_t instruction_halt_encode()
 {
 	return INSTRUCTION_HALT_SIGNATURE;
+}
+
+uint32_t instruction_arithmetics_encode(int register_dest,
+					int register_op1,
+					int register_op2,
+					int operation_type)
+{
+	uint32_t instruction = 0;
+
+	instruction |= INSTRUCTION_ARIT_SIGNATURE;
+	if (operation_type != INSTRUCTION_ARIT_TYPE_CMP) {
+		instruction |= (register_dest & INSTRUCTION_ARIT_DEST_MASK)
+			       << INSTRUCTION_ARIT_DEST_SHIFT;
+	}
+
+	instruction |= (register_op1 & INSTRUCTION_ARIT_OP1_MASK)
+		       << INSTRUCTION_ARIT_OP1_SHIFT;
+
+	instruction |= (register_op2 & INSTRUCTION_ARIT_OP2_MASK)
+		       << INSTRUCTION_ARIT_OP2_SHIFT;
+
+	instruction |= operation_type << INSTRUCTION_ARIT_TYPE_ADD;
+
+	return instruction;
 }
 
 uint32_t instruction_encode(const char* str)
@@ -188,7 +226,19 @@ uint32_t instruction_encode(const char* str)
 		return instruction_memory_encode(operands[0], operands[1], 0);
 	} else if (strcmp(info.name, INSTRUCTION_HALT) == 0) {
 		return instruction_halt_encode();
+	} else if (strcmp(info.name, INSTRUCTION_ADD) == 0) {
+		return instruction_arithmetics_encode(
+		    operands[0], operands[1], operands[2],
+		    INSTRUCTION_ARIT_TYPE_ADD);
+	} else if (strcmp(info.name, INSTRUCTION_SUBTRACT) == 0) {
+		return instruction_arithmetics_encode(
+		    operands[0], operands[1], operands[2],
+		    INSTRUCTION_ARIT_TYPE_SUB);
+	} else if (strcmp(info.name, INSTRUCTION_SUBTRACT) == 0) {
+		return instruction_arithmetics_encode(
+		    -1, operands[0], operands[1], INSTRUCTION_ARIT_TYPE_CMP);
 	}
+	printf("Undefined instruction!\n");
 
 	return 0;
 }

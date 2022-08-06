@@ -49,6 +49,8 @@ void cpu_exec(struct cpu* cpu, uint32_t instruction)
 		cpu_memory_instruction(cpu, instruction);
 	} else if (signature == INSTRUCTION_HALT_SIGNATURE) {
 		cpu_halt(cpu);
+	} else if (signature == INSTRUCTION_ARIT_SIGNATURE) {
+		cpu_arit_instruction(cpu, instruction);
 	}
 }
 
@@ -126,13 +128,49 @@ void cpu_memory_instruction(struct cpu* cpu, uint32_t instruction)
 	}
 }
 
+void cpu_arit_instruction(struct cpu* cpu, uint32_t instruction)
+{
+	uint32_t reg_dest;
+	uint32_t reg_op1;
+	uint32_t reg_op2;
+
+	uint32_t type = (instruction >> INSTRUCTION_ARIT_TYPE_SHIFT) &
+			INSTRUCTION_ARIT_TYPE_MASK;
+
+	reg_op1 = (instruction >> INSTRUCTION_ARIT_OP1_SHIFT) &
+		  INSTRUCTION_ARIT_OP1_MASK;
+	reg_op2 = (instruction >> INSTRUCTION_ARIT_OP2_SHIFT) &
+		  INSTRUCTION_ARIT_OP2_MASK;
+
+	int val1 = cpu->state.r[reg_op1];
+	int val2 = cpu->state.r[reg_op2];
+
+	if (type != INSTRUCTION_ARIT_TYPE_SUB) {
+		reg_dest = (instruction >> INSTRUCTION_ARIT_DEST_SHIFT) &
+			   INSTRUCTION_ARIT_DEST_MASK;
+
+		if (type == INSTRUCTION_ARIT_TYPE_SUB)
+			val2 *= -1;
+
+		cpu->state.r[reg_dest] = val1 + val2;
+	} else {
+		int res = val1 - val2;
+		if (res == 0) {
+			cpu->state.flags |= CPU_FLAG_ZERO;
+		} else if (res < 0) {
+			cpu->state.flags |= CPU_FLAG_NEGATIVE;
+		}
+	}
+}
+
 void cpu_memory_hook(struct cpu* cpu, uint32_t address, int write)
 {
 	struct mm_zone* ptr = cpu->memory.mm_zone_head;
 	while (ptr != NULL) {
 		if (address >= ptr->external_offset &&
 		    address < ptr->external_offset + ptr->size) {
-			ptr->hook(address - ptr->external_offset);
+			ptr->hook(address - ptr->external_offset, ptr,
+				  &cpu->memory);
 		}
 		ptr = ptr->next;
 	}
@@ -146,5 +184,6 @@ void cpu_state_printdebug(struct cpu* cpu)
 			printf("\n");
 		printf("R%d: %08x\t", rc, cpu->state.r[rc]);
 	}
-	printf("\nPC: %0#x\n", cpu->state.pc);
+	printf("\nPC: %0#x\t", cpu->state.pc);
+	printf("FLAGS: %0#x\n", cpu->state.flags);
 }

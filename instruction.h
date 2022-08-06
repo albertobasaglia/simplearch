@@ -150,7 +150,7 @@ uint32_t instruction_memory_encode(int reg, int address, int store);
 #define INSTRUCTION_MOVE_DEST_MASK          0xf
 #define INSTRUCTION_MOVE_DEST_SHIFT         24
 #define INSTRUCTION_MOVE_IMM_NEGATIVE_SHIFT (23)
-#define INSTRUCTION_MOVE_IMM_NEGATIVE       (1 << 23)
+#define INSTRUCTION_MOVE_IMM_NEGATIVE       (1 << INSTRUCTION_MOVE_IMM_NEGATIVE_SHIFT)
 /*
  * Encodes a move instruction.
  *
@@ -166,9 +166,20 @@ uint32_t instruction_memory_encode(int reg, int address, int store);
 uint32_t instruction_move_encode(int register_src, int register_dest);
 uint32_t instruction_move_immediate_encode(int immediate, int register_dest);
 
+#define INSTRUCTION_ARIT_SIGNATURE  (2 << 28)
+#define INSTRUCTION_ARIT_DEST_SHIFT 0
+#define INSTRUCTION_ARIT_DEST_MASK  0xf
+#define INSTRUCTION_ARIT_OP1_SHIFT  4
+#define INSTRUCTION_ARIT_OP1_MASK   0xf
+#define INSTRUCTION_ARIT_OP2_SHIFT  8
+#define INSTRUCTION_ARIT_OP2_MASK   0xf
+#define INSTRUCTION_ARIT_TYPE_SHIFT 12
+#define INSTRUCTION_ARIT_TYPE_MASK  4
+#define INSTRUCTION_ARIT_TYPE_ADD   1
+#define INSTRUCTION_ARIT_TYPE_SUB   2
+#define INSTRUCTION_ARIT_TYPE_CMP   3
 /*
  * Encodes an arithmetic instruction.
- * TODO
  *
  * [0,3]   - dest
  * [4,7]   - op1

@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
-void hook(int internal_offset)
+void hook(int internal_offset, struct mm_zone* mm_zone, struct memory* memory)
 {
-	printf("internal offset hook: %d\n", internal_offset);
+	uint32_t value = memory
+			     ->ptr[mm_zone->external_offset + internal_offset];
+	printf("Memory mapped output: %d\n", value);
 }
 
 int main(int argc, char* argv[])
@@ -19,12 +21,12 @@ int main(int argc, char* argv[])
 	FILE* in = fopen(argv[1], "rb");
 	struct cpu cpu;
 	cpu_init(&cpu, 0x1000);
-	memory_add_mm_zone(&cpu.memory, 10, 2, hook);
+	memory_add_mm_zone(&cpu.memory, 500, 2, hook);
 	fread(cpu.memory.ptr, 1000, 1, in);
 	while (!cpu_is_halted(&cpu)) {
 		cpu_tick(&cpu);
 		usleep(100000);
-		cpu_state_printdebug(&cpu);
+		/* cpu_state_printdebug(&cpu); */
 	}
 	cpu_free(&cpu);
 	fclose(in);

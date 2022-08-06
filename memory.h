@@ -3,10 +3,14 @@
 
 #include <stdint.h>
 
+struct memory;
+
 struct mm_zone {
 	int external_offset;
 	int size;
-	void (*hook)(int internal_offset);
+	void (*hook)(int internal_offset,
+		     struct mm_zone* mm_zone,
+		     struct memory* memory);
 	struct mm_zone* next;
 };
 
@@ -29,7 +33,9 @@ int memory_write(struct memory* memory, uint32_t address, uint32_t data);
 void memory_add_mm_zone(struct memory* memory,
 			int external_offset,
 			int size,
-			void (*hook)(int internal_offset));
+			void (*hook)(int internal_offset,
+				     struct mm_zone* mm_zone,
+				     struct memory* memory));
 
 void mm_zones_free_recursive(struct mm_zone* head);
 
