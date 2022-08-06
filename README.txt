@@ -1,3 +1,7 @@
+I'm gifting myself a little cpu emulator to be used as an assembly playground.
+I'll be making an assembler too since I don't want to write instructions
+in binary.
+
 Arch specifications:
 
 Instructions are encoded on 32 bits.
@@ -33,3 +37,8 @@ Condition codes [C]:
         - NE: not equal
         - GT: greater than
         - GE: equal or greater than
+
+Todo:
+        - Implement some output functionality:
+                - could implement an OUT instruction and and expansion port
+                - or maybe memory map some video memory: cooler =D

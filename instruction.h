@@ -25,8 +25,8 @@ enum instruction_operand_type instruction_decode_operand(const char* str);
  * - IMMEDIATE: returns its value
  * - REGISTER: resturns register id
  * */
-uint32_t instruction_encode_operand(const char* str,
-				    enum instruction_operand_type type);
+uint32_t instruction_getvalue_operand(const char* str,
+				      enum instruction_operand_type type);
 
 struct instruction_info {
 	char name[10];
@@ -35,7 +35,19 @@ struct instruction_info {
 	enum instruction_operand_type operands[MAX_OPERANDS];
 };
 
-int instruction_populate_info(const char* str, struct instruction_info* info);
+/*
+ * Fills info with information about the current instruction.
+ * Fills operands with their value (see function instruction_encode_operand).
+ * */
+int instruction_populate_info(const char* str,
+			      struct instruction_info* info,
+			      uint32_t* operands);
+
+/*
+ * Prints an instruction given its structure and the operands value.
+ * */
+void instruction_print_info(const struct instruction_info* info,
+			    const uint32_t* operands_value);
 
 static struct instruction_info instructions[] = {
     {
