@@ -240,16 +240,13 @@ uint32_t instruction_branch_encode(const char* label,
 	instruction |= (condition_code & INSTRUCTION_BRANCH_CONDITION_MASK)
 		       << INSTRUCTION_BRANCH_CONDITION_SHIFT;
 	if (*head == NULL) {
-		printf("No list to search for symbol\n");
 		struct label* created = label_new_label(head, label, 0, 0);
+		label_add_reference(created, instruction, index);
 	} else {
 		struct label* existing = label_find_name(*head, label);
 		if (existing == NULL) {
 			label_new_label(head, label, 0, 0);
-			printf("Symbol not in the list\n");
 		} else {
-			printf("Symbol found with address: %d\n",
-			       existing->value);
 			instruction |= instruction_branch_address_encode(
 			    existing->value, index);
 		}

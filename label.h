@@ -5,11 +5,14 @@
 #define LABEL_MAX_LENGTH 20
 
 struct reference {
-	uint32_t instruction;
+	uint32_t instruction; // <- which is not complete
+	uint32_t index; // <- position of the instruction in the executable
 	struct reference* next;
 };
 
-void reference_init(struct reference* reference, uint32_t instruction);
+void reference_init(struct reference* reference,
+		    uint32_t instruction,
+		    uint32_t index);
 
 struct label {
 	char name[LABEL_MAX_LENGTH];
@@ -38,6 +41,5 @@ void label_add_reference(struct label* label,
 			 uint32_t index);
 
 void reference_destroy(struct reference* reference);
-
 
 #endif

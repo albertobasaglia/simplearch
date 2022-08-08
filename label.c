@@ -25,7 +25,7 @@ void label_init(struct label* label, const char* name)
 
 void label_destroy(struct label* label)
 {
-	if(label==NULL)
+	if (label == NULL)
 		return;
 	label_destroy(label->next);
 	reference_destroy(label->reference_head);
@@ -59,9 +59,12 @@ struct label* label_new_label(struct label** head,
 	return label;
 }
 
-void reference_init(struct reference* reference, uint32_t instruction)
+void reference_init(struct reference* reference,
+		    uint32_t instruction,
+		    uint32_t index)
 {
 	reference->instruction = instruction;
+	reference->index = index;
 	reference->next = NULL;
 }
 
@@ -70,7 +73,7 @@ void label_add_reference(struct label* label,
 			 uint32_t index)
 {
 	struct reference* reference = malloc(sizeof(struct reference));
-	reference_init(reference, instruction);
+	reference_init(reference, instruction, index);
 	if (label->reference_head == NULL) {
 		label->reference_head = reference;
 	} else {
@@ -84,7 +87,7 @@ void label_add_reference(struct label* label,
 
 void reference_destroy(struct reference* reference)
 {
-	if(reference == NULL)
+	if (reference == NULL)
 		return;
 	reference_destroy(reference->next);
 	free(reference);

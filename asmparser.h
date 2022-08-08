@@ -26,6 +26,9 @@ void asmparser_readline(struct asmparser* asmparser, const char* line);
 
 void asmparser_writefile(struct asmparser* asmparser, FILE* file);
 
+void asmparser_resolve_references(struct asmparser* asmparser,
+				  struct label* label);
+
 /*
  * Creates a new label.
  *
