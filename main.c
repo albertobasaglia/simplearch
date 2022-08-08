@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 	while (!cpu_is_halted(&cpu)) {
 		cpu_tick(&cpu);
 		usleep(100000);
-		cpu_state_printdebug(&cpu);
+		// cpu_state_printdebug(&cpu);
 	}
 	cpu_free(&cpu);
 	fclose(in);

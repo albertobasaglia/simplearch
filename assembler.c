@@ -1,9 +1,11 @@
-#include "config.h"
-#include "instruction.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "asmparser.h"
+#include "config.h"
+#include "instruction.h"
 
 int main(int argc, char* argv[])
 {
@@ -18,13 +20,17 @@ int main(int argc, char* argv[])
 	char* line;
 	size_t read;
 
+	struct asmparser parser;
+	asmparser_init(&parser);
+
 	while (getline(&line, &read, in) != -1) {
 		if (strcmp(line, "") == 0)
 			continue;
-		uint32_t instruction = instruction_encode(line);
-		fwrite(&instruction, sizeof(uint32_t), 1, out);
-		printf("Wrote instruction: %#x\n", instruction);
+		asmparser_readline(&parser, line);
 	}
+
+	asmparser_writefile(&parser, out);
+	asmparser_destroy(&parser);
 
 	fclose(in);
 	fclose(out);

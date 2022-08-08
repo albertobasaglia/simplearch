@@ -1,5 +1,6 @@
 #include "instruction.h"
 #include "config.h"
+#include "label.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -35,8 +36,6 @@ int instruction_match_all(const char* name,
 	int count = instruction_match_name(name, possible);
 
 	for (int i = 0; i < count; i++) {
-		if (infos->conditionable != possible[i].conditionable)
-			continue;
 		if (infos->operand_count != possible[i].operand_count)
 			continue;
 		int valid = 1;
@@ -93,8 +92,10 @@ void instruction_print_info(const struct instruction_info* info,
 
 int instruction_populate_info(const char* str,
 			      struct instruction_info* info,
-			      uint32_t* operands)
+			      uint32_t* operands,
+			      char* label)
 {
+	int labeling = 0;
 	char instruction[LINEBUFFER_SIZE];
 	strncpy(instruction, str, LINEBUFFER_SIZE);
 
@@ -106,13 +107,17 @@ int instruction_populate_info(const char* str,
 	char* operand = strtok(NULL, VALID_SPLIT_TOKEN);
 	while (operand != NULL) {
 		operands_type[index] = instruction_decode_operand(operand);
-		operands[index] = instruction_getvalue_operand(
-		    operand, operands_type[index]);
+		if (operands_type[index] != LABEL) {
+			operands[index] = instruction_getvalue_operand(
+			    operand, operands_type[index]);
+		} else {
+			labeling = 1;
+			strncpy(label, operand, LABEL_MAX_LENGTH);
+		}
 		operand = strtok(NULL, VALID_SPLIT_TOKEN);
 		index++;
 	}
 
-	info->conditionable = 0; // TODO
 	info->operand_count = index;
 	strncpy(info->name, name, 10);
 	memcpy(info->operands, operands_type,
@@ -121,7 +126,7 @@ int instruction_populate_info(const char* str,
 	if (!instruction_match_all(info->name, info))
 		return ERR_INVALIDINSTRUCTION;
 
-	return 0;
+	return labeling;
 }
 
 uint32_t instruction_move_encode(int register_src, int register_dest)
@@ -208,11 +213,60 @@ uint32_t instruction_arithmetics_encode(int register_dest,
 	return instruction;
 }
 
-uint32_t instruction_encode(const char* str)
+uint32_t instruction_branch_address_encode(uint32_t address, uint32_t index)
+{
+	uint32_t format = 0;
+	int addressi = address;
+	int indexi = index;
+	int offset = address - index;
+	// TODO check offset size not exceeding constraints
+	int negative = offset < 0 ? 1 : 0;
+	if (negative) {
+		offset *= -1;
+		format |= INSTRUCTION_BRANCH_ADDRESS_NEGATIVE;
+	}
+	format |= (offset & INSTRUCTION_BRANCH_ADDRESS_MASK)
+		  << INSTRUCTION_BRANCH_ADDRESS_SHIFT;
+	return format;
+}
+
+uint32_t instruction_branch_encode(const char* label,
+				   int condition_code,
+				   struct label** head,
+				   uint32_t index)
+{
+	uint32_t instruction = 0;
+	instruction |= INSTRUCTION_BRANCH_SIGNATURE;
+	instruction |= (condition_code & INSTRUCTION_BRANCH_CONDITION_MASK)
+		       << INSTRUCTION_BRANCH_CONDITION_SHIFT;
+	if (*head == NULL) {
+		printf("No list to search for symbol\n");
+		struct label* created = label_new_label(head, label, 0, 0);
+	} else {
+		struct label* existing = label_find_name(*head, label);
+		if (existing == NULL) {
+			label_new_label(head, label, 0, 0);
+			printf("Symbol not in the list\n");
+		} else {
+			printf("Symbol found with address: %d\n",
+			       existing->value);
+			instruction |= instruction_branch_address_encode(
+			    existing->value, index);
+		}
+	}
+	return instruction;
+}
+
+uint32_t instruction_encode(const char* str,
+			    struct label** label_head_ptr,
+			    uint32_t index)
 {
 	struct instruction_info info;
 	uint32_t operands[MAX_OPERANDS];
-	instruction_populate_info(str, &info, operands);
+	char label_if_labeling[LABEL_MAX_LENGTH];
+	int labeling;
+	labeling = instruction_populate_info(str, &info, operands,
+					     label_if_labeling);
 	instruction_print_info(&info, operands);
 
 	if (strcmp(info.name, INSTRUCTION_MOVE) == 0) {
@@ -237,6 +291,14 @@ uint32_t instruction_encode(const char* str)
 	} else if (strcmp(info.name, INSTRUCTION_COMPARE) == 0) {
 		return instruction_arithmetics_encode(
 		    -1, operands[0], operands[1], INSTRUCTION_ARIT_TYPE_CMP);
+	} else if (labeling && strcmp(info.name, INSTRUCTION_BEQ) == 0) {
+		return instruction_branch_encode(label_if_labeling,
+						 INSTRUCTION_CONDITION_EQ,
+						 label_head_ptr, index);
+	} else if (labeling && strcmp(info.name, INSTRUCTION_BNE) == 0) {
+		return instruction_branch_encode(label_if_labeling,
+						 INSTRUCTION_CONDITION_NE,
+						 label_head_ptr, index);
 	}
 	printf("Undefined instruction!\n");
 

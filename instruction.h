@@ -1,8 +1,10 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 
-#include "config.h"
 #include <stdint.h>
+
+#include "config.h"
+#include "label.h"
 
 #define INSTRUCTION_MOVE     "MOV"
 #define INSTRUCTION_ADD      "ADD"
@@ -31,7 +33,6 @@ uint32_t instruction_getvalue_operand(const char* str,
 
 struct instruction_info {
 	char name[10];
-	int conditionable;
 	int operand_count;
 	enum instruction_operand_type operands[MAX_OPERANDS];
 };
@@ -39,10 +40,12 @@ struct instruction_info {
 /*
  * Fills info with information about the current instruction.
  * Fills operands with their value (see function instruction_encode_operand).
+ * Returns 0 if no labeling required. Returns 1 if labeling is required.
  * */
 int instruction_populate_info(const char* str,
 			      struct instruction_info* info,
-			      uint32_t* operands);
+			      uint32_t* operands,
+			      char* label);
 
 /*
  * Prints an instruction given its structure and the operands value.
@@ -53,57 +56,54 @@ void instruction_print_info(const struct instruction_info* info,
 static struct instruction_info instructions[] = {
     {
 	.name = INSTRUCTION_MOVE,
-	.conditionable = 0,
 	.operand_count = 2,
 	.operands = {REGISTER, IMMEDIATE},
     },
     {
 	.name = INSTRUCTION_MOVE,
-	.conditionable = 0,
 	.operand_count = 2,
 	.operands = {REGISTER, REGISTER},
     },
     {
 	.name = INSTRUCTION_ADD,
-	.conditionable = 0,
 	.operand_count = 3,
 	.operands = {REGISTER, REGISTER, REGISTER},
     },
     {
 	.name = INSTRUCTION_SUBTRACT,
-	.conditionable = 0,
 	.operand_count = 3,
 	.operands = {REGISTER, REGISTER, REGISTER},
     },
     {
 	.name = INSTRUCTION_COMPARE,
-	.conditionable = 0,
 	.operand_count = 2,
 	.operands = {REGISTER, REGISTER},
     },
     {
-	.name = INSTRUCTION_BRANCH,
-	.conditionable = 1,
-	.operand_count = 1,
-	.operands = {REGISTER, LABEL},
-    },
-    {
 	.name = INSTRUCTION_LOAD,
-	.conditionable = 0,
 	.operand_count = 2,
 	.operands = {REGISTER, REGISTER},
     },
     {
 	.name = INSTRUCTION_STORE,
-	.conditionable = 0,
 	.operand_count = 2,
 	.operands = {REGISTER, REGISTER},
     },
     {
 	.name = INSTRUCTION_HALT,
-	.conditionable = 0,
 	.operand_count = 0,
 	.operands = {},
+    },
+/* Branch instructions */
+#define INSTRUCTION_B   "B"
+#define INSTRUCTION_BEQ "BEQ"
+#define INSTRUCTION_BNE "BNE"
+#define INSTRUCTION_BGT "BGT"
+#define INSTRUCTION_BGE "BGE"
+    {
+	.name = INSTRUCTION_BEQ,
+	.operand_count = 1,
+	.operands = {REGISTER, LABEL},
     },
 };
 
@@ -123,7 +123,9 @@ int instruction_match_all(const char* name,
 /*
  * Encodes an instruction.
  * */
-uint32_t instruction_encode(const char* str);
+uint32_t instruction_encode(const char* str,
+			    struct label** label_head_ptr,
+			    uint32_t index);
 
 #define INSTRUCTION_MEMORY_SIGNATURE      (0 << 28)
 #define INSTRUCTION_MEMORY_STORE          (1 << 8)
@@ -192,16 +194,36 @@ uint32_t instruction_arithmetics_encode(int register_dest,
 					int register_op2,
 					int operation_type);
 
+#define INSTRUCTION_BRANCH_SIGNATURE        (3 << 28)
+#define INSTRUCTION_BRANCH_ADDRESS_SHIFT    0
+#define INSTRUCTION_BRANCH_ADDRESS_MASK     0xffff
+#define INSTRUCTION_BRANCH_ADDRESS_NEGATIVE (1 << 17)
+#define INSTRUCTION_BRANCH_CONDITION_SHIFT  24
+#define INSTRUCTION_BRANCH_CONDITION_MASK   0xf
+
+#define INSTRUCTION_CONDITION_EQ            0
+#define INSTRUCTION_CONDITION_NE            1
+#define INSTRUCTION_CONDITION_GT            2
+#define INSTRUCTION_CONDITION_GE            3
 /*
  * Encodes a branch instruction.
- * TODO
  *
- * [0-14]  - |offset|
- * [15] - 0(positive)/1(negative)
- * [16-27] - condition code
+ * [0-16]  - |offset|
+ * [17]    - 0(positive)/1(negative)
+ * [24-27] - condition code
  * [28-31] = 3
  * */
-uint32_t instruction_branch_encode(int address_offset, int condition_code);
+uint32_t instruction_branch_encode(const char* label,
+				   int condition_code,
+				   struct label** head,
+				   uint32_t index);
+
+/*
+ * Generates the address part of the branch instruction.
+ * address - address where the branch is directed
+ * index - address where the instruction will be placed
+ * */
+uint32_t instruction_branch_address_encode(uint32_t address, uint32_t index);
 
 #define INSTRUCTION_HALT_SIGNATURE (4 << 28)
 /*

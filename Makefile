@@ -2,7 +2,9 @@ CC = gcc -ggdb
 
 OBJS = cpu.o \
        memory.o \
-       instruction.o
+       instruction.o \
+       label.o \
+       asmparser.o
 
 all: emulator assembler
 

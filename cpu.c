@@ -51,6 +51,8 @@ void cpu_exec(struct cpu* cpu, uint32_t instruction)
 		cpu_halt(cpu);
 	} else if (signature == INSTRUCTION_ARIT_SIGNATURE) {
 		cpu_arit_instruction(cpu, instruction);
+	} else if (signature == INSTRUCTION_BRANCH_SIGNATURE) {
+		cpu_branch_instruction(cpu, instruction);
 	}
 }
 
@@ -160,6 +162,32 @@ void cpu_arit_instruction(struct cpu* cpu, uint32_t instruction)
 		} else if (res < 0) {
 			cpu->state.flags |= CPU_FLAG_NEGATIVE;
 		}
+	}
+}
+
+void cpu_branch_instruction(struct cpu* cpu, uint32_t instruction)
+{
+	uint32_t offset = instruction & INSTRUCTION_BRANCH_ADDRESS_MASK;
+	if (instruction & INSTRUCTION_BRANCH_ADDRESS_NEGATIVE) {
+		offset *= -1;
+	}
+
+	uint32_t condition_code = (instruction >>
+				   INSTRUCTION_BRANCH_CONDITION_SHIFT) &
+				  INSTRUCTION_BRANCH_CONDITION_MASK;
+
+	int jumps = 0;
+	if (condition_code == INSTRUCTION_CONDITION_EQ) {
+		if (cpu->state.flags & CPU_FLAG_ZERO)
+			jumps = 1;
+	} else if (condition_code == INSTRUCTION_CONDITION_NE) {
+		if (!(cpu->state.flags & CPU_FLAG_ZERO))
+			jumps = 1;
+	}
+	// check condition codes
+	if (jumps) {
+		cpu->state.pc += offset;
+		cpu->state.pc -= 1;
 	}
 }
 
