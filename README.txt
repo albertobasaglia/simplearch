@@ -1,4 +1,4 @@
-I'm gifting myself a little cpu emulator to be used as an assembly playground.
+A little cpu emulator to be used as an assembly playground.
 I'll be making an assembler too since I don't want to write instructions
 in binary.
 
@@ -39,7 +39,13 @@ Condition codes [C]:
         - GT: greater than
         - GE: equal or greater than
 
-Todo:
-        - Implement some output functionality:
-                - could implement an OUT instruction and and expansion port
-                - or maybe memory map some video memory: cooler =D
+Character output is achieved writing to address 500, which is a memory
+map for a virtual output.
+
+The makefile builds both an assembler and an emulator.
+
+The assembler generates executable (by the emulator) binaries from mnemonics.
+
+The emulator loads the binary and executes it. The memory mapped devices (such
+as the serial output) are loaded in ram. The code is hard-loaded at address
+0x0, used as the entry point.
