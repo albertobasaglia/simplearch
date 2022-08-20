@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 	FILE* in = fopen(argv[1], "r");
 	FILE* out = fopen(argv[2], "wb");
 
-	char* line;
+	char* line = NULL;
 	size_t read;
 
 	struct asmparser parser;
@@ -34,5 +34,6 @@ int main(int argc, char* argv[])
 
 	fclose(in);
 	fclose(out);
+	free(line);
 	return 0;
 }
